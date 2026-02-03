@@ -1,3 +1,10 @@
+"""
+Mini-SWE-Agent integration for inverse_strategy.
+
+This module provides LLM-powered agents that can edit code in Docker environments.
+Based on CodeClash's minisweagent.py with adaptations for inverse strategy tasks.
+"""
+
 import logging
 import os
 import traceback
@@ -44,7 +51,7 @@ class ClashAgent(DefaultAgent):
 
 
 class MiniSWEAgent(Player):
-    """Player with agentic code editing capabilities"""
+    """Player with agentic code editing capabilities using mini-swe-agent."""
 
     def __init__(self, config: dict, environment: ContainerEnvironment, game_context: GameContext):
         super().__init__(config, environment=environment, game_context=game_context)

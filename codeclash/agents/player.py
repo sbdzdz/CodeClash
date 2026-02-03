@@ -62,11 +62,13 @@ class Player(ABC):
 
     # --- Main methods ---
 
-    def pre_run_hook(self, *, new_round: int) -> None:
+    def pre_run_hook(self, *, new_round: int, accuracy_history: dict[int, float] | None = None) -> None:
         """Should be called before we call the run method."""
         if new_round == 1:
             self._tag_round(0)
         self.game_context.round = new_round
+        if accuracy_history is not None:
+            self.game_context.accuracy_history = accuracy_history
 
     def _write_changes_to_file(self, *, round: int) -> None:
         """Write all changes to a JSON file in players/{name}/changes_r{round}.json"""

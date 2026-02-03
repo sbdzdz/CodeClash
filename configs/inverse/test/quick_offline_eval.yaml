@@ -1,0 +1,48 @@
+# Quick test config: 1 round, 2 sims - for testing offline evaluation
+#
+# Offline Evaluation Design:
+# - Target vs Opponent play in simulation (learner does NOT play)
+# - Learner's code is evaluated offline on target's states
+
+tournament:
+  rounds: 1
+
+game:
+  name: BattleSnake
+  sims_per_round: 2
+  args:
+    width: 11
+    height: 11
+    browser: false
+
+players:
+  # Learner: edits code, does NOT play in simulation
+  - agent: inverse
+    name: learner
+    editable: true
+    config:
+      agent: !include inverse/mini/quick.yaml
+      model:
+        model_name: openai/gpt-5
+        cost_tracking: ignore_errors
+        model_kwargs:
+          api_base: http://localhost:8000/v1
+          api_key: dummy
+
+  # Target: strategy to be recovered, plays in simulation
+  - agent: static
+    name: target
+    editable: false
+    args:
+      source_path: data/inverse/targets/greedy_food
+
+  # Opponent: plays against target in simulation
+  - agent: static
+    name: opponent
+    editable: false
+    args:
+      source_path: data/inverse/targets/greedy_food
+
+prompts:
+  game_description: |
+    Quick test for offline evaluation.

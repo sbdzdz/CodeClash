@@ -30,6 +30,13 @@ instance_template: |
   Your objective is to write code that produces the SAME actions as the target agent.
   This is NOT about winning the game - it's about matching the target's behavior exactly.
 
+  **How evaluation works (IMPORTANT):**
+  - You do NOT play the game directly
+  - The target plays against an opponent, generating game traces
+  - Your code is evaluated OFFLINE: we call your code with each state the target saw
+  - Accuracy = how often your action matches what the target actually did
+  - Goal: If you were in the target's exact position, would you make the same decision?
+
   The key files are in this codebase ({{working_dir}}):
    - `main.py`: Your code to edit (must match target's behavior)
    - `docs/`: Game documentation
@@ -38,7 +45,7 @@ instance_template: |
   ## Trace Files (IMPORTANT)
 
   After each round, traces are saved to `/logs/rounds/{round_num}/`:
-   - `traces.json`: **START HERE** - Summary with your current accuracy
+   - `traces.json`: **START HERE** - Summary with your current accuracy and ALL mismatches
    - `sim_*.jsonl` or `sim_*.json`: Raw game traces (state-action pairs)
    - `results.json`: Round statistics
 
@@ -46,10 +53,15 @@ instance_template: |
   ```json
   {
     "accuracy": 0.25,           // Your current accuracy (goal: 1.0)
-    "total_actions": 1000,      // Total actions compared
-    "matching_actions": 250,    // Actions where you matched target
-    "sample_mismatches": [      // Examples where you differed
-      {"turn": 5, "learner_action": "up", "target_action": "down"},
+    "total_actions": 100,       // Total states evaluated
+    "matching_actions": 25,     // States where your action matched target
+    "mismatches": [             // ALL mismatches with full state
+      {
+        "turn": 5,
+        "learner_action": "up",
+        "target_action": "down",
+        "state": {...}          // The exact game state - use this to debug!
+      },
       ...
     ]
   }
@@ -57,11 +69,11 @@ instance_template: |
 
   ## Workflow
 
-  1. **Read traces.json first** - Check your current accuracy and mismatches
-  2. **Analyze sample_mismatches** - These show exactly where your strategy differs
-  3. **Look for patterns** - What rule is the target following?
+  1. **Read traces.json first** - Check your current accuracy
+  2. **Analyze mismatches** - Each has the full state, your action, and target's action
+  3. **Look for patterns** - What rule is the target following that you're missing?
   4. **Update main.py** - Implement the pattern you discovered
-  5. **Submit** - Your code will be tested in the next round
+  5. **Submit** - Your code is evaluated after each round
 
   This is round {{round}} of {{rounds}}.
 
@@ -83,10 +95,10 @@ instance_template: |
 
   1. Check README_agent.md for notes from previous rounds.
   2. Start by reading `/logs/rounds/{previous_round}/traces.json` to see your accuracy.
-  3. Focus on the `sample_mismatches` - they reveal the target's decision pattern.
+  3. Focus on the `mismatches` array - each entry has the FULL STATE that caused a mismatch.
   4. The target likely follows simple rules (chase food, avoid walls, prefer certain directions).
   5. Test your hypothesis by checking if it explains ALL the mismatches.
-  6. You can write analysis scripts to process the raw sim_*.jsonl files if needed.
+  6. You can write analysis scripts to process the mismatches programmatically.
   7. Remember `/logs/` is outside your working directory when writing analyses.
 
   ## Command Execution Rules

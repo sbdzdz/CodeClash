@@ -188,6 +188,147 @@ def compute_state_distance(s1: dict, s2: dict) -> float:
     return abs(head1["x"] - head2["x"]) + abs(head1["y"] - head2["y"])
 
 
+def extract_player_state(turn_data: dict, player_name: str) -> dict | None:
+    """
+    Extract a player's view of the game state from a turn record.
+    
+    Constructs the game_state dict that would be passed to player's move() function,
+    with "you" set to the specified player's snake data.
+    
+    Args:
+        turn_data: Raw turn data from sim_*.jsonl
+        player_name: Name of the player whose perspective to extract
+        
+    Returns:
+        Game state dict with "you" set to player's snake, or None if not found.
+    """
+    board = turn_data.get("board", {})
+    snakes = board.get("snakes", [])
+    
+    # Find the player's snake
+    player_snake = None
+    for snake in snakes:
+        if snake.get("name") == player_name:
+            player_snake = snake
+            break
+    
+    if player_snake is None:
+        return None
+    
+    # Construct the game state from the player's perspective
+    return {
+        "game": turn_data.get("game", {}),
+        "turn": turn_data.get("turn", 0),
+        "board": board,
+        "you": player_snake,
+    }
+
+
+def extract_player_action(turn_data: dict, next_turn_data: dict, player_name: str) -> str | None:
+    """
+    Infer a player's action by comparing positions between turns.
+    
+    The action is determined by how the snake's head moved:
+    - dx = +1 -> "right"
+    - dx = -1 -> "left"
+    - dy = +1 -> "up"
+    - dy = -1 -> "down"
+    
+    Args:
+        turn_data: Current turn data
+        next_turn_data: Next turn data (to see where snake moved)
+        player_name: Name of the player
+        
+    Returns:
+        Action string ("up"/"down"/"left"/"right") or None if cannot determine.
+    """
+    board = turn_data.get("board", {})
+    next_board = next_turn_data.get("board", {})
+    
+    # Find player's snake in both turns
+    current_head = None
+    next_head = None
+    
+    for snake in board.get("snakes", []):
+        if snake.get("name") == player_name:
+            current_head = snake.get("head", {})
+            break
+    
+    for snake in next_board.get("snakes", []):
+        if snake.get("name") == player_name:
+            next_head = snake.get("head", {})
+            break
+    
+    if current_head is None or next_head is None:
+        return None
+    
+    dx = next_head.get("x", 0) - current_head.get("x", 0)
+    dy = next_head.get("y", 0) - current_head.get("y", 0)
+    
+    if dx == 1:
+        return "right"
+    elif dx == -1:
+        return "left"
+    elif dy == 1:
+        return "up"
+    elif dy == -1:
+        return "down"
+    
+    return None
+
+
+def extract_state_action_pairs(sim_file: Path | str, player_name: str) -> list[tuple[dict, str]]:
+    """
+    Extract all (state, action) pairs for a player from a simulation file.
+    
+    This is the main function for offline evaluation - it reads a sim file and
+    returns all the states the player saw and actions they took.
+    
+    Args:
+        sim_file: Path to sim_*.jsonl file
+        player_name: Name of the player to extract data for
+        
+    Returns:
+        List of (state, action) tuples where:
+        - state: The game_state dict the player received (with "you" = player's snake)
+        - action: The action the player took ("up"/"down"/"left"/"right")
+    """
+    import json
+    
+    with open(sim_file) as f:
+        lines = f.read().strip().split('\n')
+    
+    # Parse all turn records (skip metadata and results)
+    turns = []
+    for line in lines:
+        try:
+            turn_data = json.loads(line)
+            if 'board' in turn_data:  # Has board = is a turn record
+                turns.append(turn_data)
+        except json.JSONDecodeError:
+            continue
+    
+    # Extract state-action pairs from consecutive turns
+    pairs = []
+    for i in range(len(turns) - 1):
+        turn_data = turns[i]
+        next_turn_data = turns[i + 1]
+        
+        # Extract player's state (what they saw)
+        state = extract_player_state(turn_data, player_name)
+        if state is None:
+            continue
+        
+        # Extract player's action (inferred from position change)
+        action = extract_player_action(turn_data, next_turn_data, player_name)
+        if action is None:
+            continue
+        
+        pairs.append((state, action))
+    
+    return pairs
+
+
 # =============================================================================
 # Trace Parser
 # =============================================================================

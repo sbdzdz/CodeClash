@@ -239,3 +239,6 @@ docs/visualization/*.jsonl
 docs/visualization/*.png
 docs/visualization/code_org
 docs/visualization/elo_plots
+
+# Inverse Strategy - large extracted strategies folder
+data/inverse/extracted_strategies/

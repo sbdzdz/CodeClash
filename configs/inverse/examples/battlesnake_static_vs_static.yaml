@@ -3,6 +3,8 @@
 # Both agents are static (pre-written code).
 # Useful for testing arena, trace parsing, and accuracy computation
 # without requiring LLM calls.
+#
+# Note: This is a 2-player setup since there's no learner.
 
 tournament:
   rounds: 1
@@ -20,12 +22,12 @@ players:
     name: player1
     editable: false
     args:
-      source_path: data/targets/greedy_food
+      source_path: data/inverse/targets/greedy_food
 
   - agent: static
     name: player2
     editable: false
     args:
-      source_path: data/targets/greedy_food
+      source_path: data/inverse/targets/greedy_food
 
 prompts: {}

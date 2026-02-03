@@ -1,14 +1,24 @@
+"""YAML utilities for config processing."""
+
 import re
 from pathlib import Path
 
 
 def resolve_includes(yaml_content: str, *, base_dir: Path = Path(".")) -> str:
     """Pre-process YAML content to resolve all !include directives.
+    
     This will take the yaml content as a string and return the same string with all
     !include directives resolved.
 
     The reason we don't go with pyyaml-include or similar options is that they don't
     support merge keys, see https://github.com/tanbro/pyyaml-include/issues/53 .
+    
+    Args:
+        yaml_content: Raw YAML content as string
+        base_dir: Base directory for resolving relative include paths
+        
+    Returns:
+        YAML content with all !include directives resolved
     """
 
     def include_replacer(match):

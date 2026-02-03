@@ -2,7 +2,7 @@
 
 from codeclash.tournaments.tournament import AbstractTournament
 from codeclash.tournaments.pvp import PvpTournament
-from codeclash.tournaments.single_player import SinglePlayerTournament
+from codeclash.tournaments.single_player import SinglePlayerTraining
 
 # Lazy import to avoid circular dependency with agents module
 def __getattr__(name):
@@ -14,6 +14,6 @@ def __getattr__(name):
 __all__ = [
     "AbstractTournament",
     "PvpTournament",
-    "SinglePlayerTournament",
+    "SinglePlayerTraining",
     "InverseStrategyTournament",
 ]
