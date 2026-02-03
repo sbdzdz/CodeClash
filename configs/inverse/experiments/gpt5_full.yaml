@@ -1,0 +1,44 @@
+tournament:
+  rounds: 10
+
+game:
+  name: BattleSnake
+  sims_per_round: 10
+  args:
+    width: 11
+    height: 11
+    browser: false
+
+players:
+  - agent: inverse
+    name: learner
+    editable: true
+    config:
+      agent: !include inverse/mini/default.yaml
+      model:
+        model_name: openai/gpt-5
+        cost_tracking: ignore_errors
+        model_kwargs:
+          api_base: http://localhost:8000/v1
+          api_key: dummy
+
+  - agent: static
+    name: target
+    editable: false
+    args:
+      source_path: data/extracted_strategies/BattleSnake/PvpTournament.BattleSnake.r15.s1000.p2.claude-sonnet-4-20250514.claude-sonnet-4-5-20250929.251001034322/final/cs4-20250514
+
+prompts:
+  game_description: |
+    You are a programmer ({{player_id}}) learning to recover another agent's BattleSnake strategy.
+    
+    ## Your Goal
+    Write code that produces the SAME actions as the target agent.
+    This is NOT about winning - it's about matching the target's behavior exactly.
+    
+    ## The Game: BattleSnake
+    BattleSnake is a multiplayer snake game on an 11x11 grid.
+    - Your snake moves every turn: "up", "down", "left", or "right"
+    - Eat food to grow longer and gain health
+    - Avoid walls, your own body, and other snakes
+    - If you collide or run out of health, you die

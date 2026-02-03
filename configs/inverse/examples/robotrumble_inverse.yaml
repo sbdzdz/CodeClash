@@ -1,0 +1,69 @@
+# RobotRumble Inverse Strategy Tournament
+#
+# Agent A (learner): LLM agent that learns from traces to recover target
+# Agent B (target): Static expert code that learner tries to recover
+#
+# Goal: Learner matches target's actions (not win the game)
+
+tournament:
+  rounds: 5
+
+game:
+  name: RobotRumble
+  sims_per_round: 100
+  args:
+    raw: true
+
+players:
+  # Agent A: The learner (can edit, tries to recover target)
+  - agent: inverse
+    name: learner
+    editable: true
+    config:
+      agent: !include inverse/mini/default.yaml
+      model:
+        model_name: '@anthropic/claude-sonnet-4-20250514'
+        model_class: portkey
+        model_kwargs:
+          temperature: 0.2
+          max_tokens: 4096
+
+  # Agent B: The target (static, its behavior is what learner tries to match)
+  - agent: static
+    name: target
+    editable: false
+    args:
+      source_path: data/extracted_strategies/RobotRumble
+
+prompts:
+  game_description: |
+    You are a programmer ({{player_id}}) learning to recover another agent's RobotRumble strategy.
+
+    ## Your Goal
+    Write code that produces the SAME actions as the target agent.
+    This is NOT about winning - it's about matching the target's behavior exactly.
+
+    ## The Game: RobotRumble
+    RobotRumble is a robot battle arena game.
+    - Control a robot that can move and attack
+    - Actions include movement directions and attack commands
+    - Manage health and positioning to survive
+    - Outmaneuver opponents while avoiding damage
+
+    ## What You Need to Do
+    1. Read traces from previous rounds to see how the target agent behaves
+    2. Identify patterns in the target's decision-making
+    3. Edit main.py to replicate those patterns
+    4. Your accuracy is measured by how often your actions match the target's
+
+    ## Key Files
+    - `main.py` - Your code (edit this to match target behavior)
+    - `docs/` - Game documentation and API reference
+    - `/logs/rounds/{N}/traces.json` - Your accuracy and sample mismatches
+    - `/logs/rounds/{N}/sim_*.json` - Raw game traces (state-action pairs)
+
+    ## Tips
+    - Start by reading traces.json to see your current accuracy
+    - Focus on sample_mismatches - they show exactly where you differ
+    - The target likely follows tactical rules (attack when close, retreat when low health)
+    - Look for conditional patterns based on game state

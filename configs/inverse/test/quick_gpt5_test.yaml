@@ -1,0 +1,63 @@
+# Quick GPT-5 test config (2 steps, 1 round, 2 sims)
+
+tournament:
+  rounds: 1
+
+game:
+  name: BattleSnake
+  sims_per_round: 2
+  args:
+    width: 11
+    height: 11
+    browser: false
+
+players:
+  - agent: inverse
+    name: learner
+    editable: true
+    config:
+      agent: !include inverse/mini/quick.yaml
+      model:
+        model_name: openai/gpt-5
+        cost_tracking: ignore_errors
+        model_kwargs:
+          api_base: http://localhost:8000/v1
+          api_key: dummy
+
+  - agent: static
+    name: target
+    editable: false
+    args:
+      source_path: data/extracted_strategies/BattleSnake/PvpTournament.BattleSnake.r15.s1000.p2.claude-sonnet-4-20250514.claude-sonnet-4-5-20250929.251001034322/final/cs4-20250514
+
+prompts:
+  game_description: |
+    You are a programmer ({{player_id}}) learning to recover another agent's BattleSnake strategy.
+    
+    ## Your Goal
+    Write code that produces the SAME actions as the target agent.
+    This is NOT about winning - it's about matching the target's behavior exactly.
+    
+    ## The Game: BattleSnake
+    BattleSnake is a multiplayer snake game on an 11x11 grid.
+    - Your snake moves every turn: "up", "down", "left", or "right"
+    - Eat food to grow longer and gain health
+    - Avoid walls, your own body, and other snakes
+    - If you collide or run out of health, you die
+    
+    ## What You Need to Do
+    1. Read traces from previous rounds to see how the target agent behaves
+    2. Identify patterns in the target's decision-making
+    3. Edit main.py to replicate those patterns
+    4. Your accuracy is measured by how often your actions match the target's
+    
+    ## Key Files
+    - `main.py` - Your code (edit this to match target behavior)
+    - `docs/` - Game documentation and API reference
+    - `/logs/rounds/{N}/traces.json` - Your accuracy and sample mismatches
+    - `/logs/rounds/{N}/sim_*.jsonl` - Raw game traces (state-action pairs)
+    
+    ## Tips
+    - Start by reading traces.json to see your current accuracy
+    - Focus on sample_mismatches - they show exactly where you differ
+    - The target likely follows simple rules (chase food, avoid walls, prefer certain directions)

@@ -97,3 +97,51 @@ class MiniSWEAgent(Player):
             }
         if exit_status.lower().strip() not in ["", "submitted", "limitsexceeded"] and exc_message is not None:
             raise RuntimeError(f"Agent {self.name} failed with exit status: {exit_status} and exception: {exc_message}")
+
+
+class InverseStrategyAgent(MiniSWEAgent):
+    """
+    Agent for inverse strategy extraction.
+    
+    Extends MiniSWEAgent to handle the inverse strategy task:
+    - Receives game traces (state-action pairs) as context
+    - Analyzes traces to understand the strategy
+    - Writes code that reproduces the observed behavior
+    
+    The key difference from regular CodeClash:
+    - CodeClash: Agent competes by writing better code each round
+    - InverseStrategy: Agent analyzes traces and writes code that matches observed behavior
+    
+    Additional context passed via game_context.prompts:
+    - traces_summary: Summary of available traces
+    - evaluation_results: Results from previous round's code evaluation
+    """
+
+    def __init__(self, config: dict, environment: DockerEnvironment, game_context: GameContext):
+        super().__init__(config, environment=environment, game_context=game_context)
+        # Track inverse strategy specific metadata
+        self._metadata["inverse_strategy"] = {
+            "traces_provided": False,
+            "evaluation_history": [],
+        }
+
+    def run(self):
+        """
+        Run the inverse strategy agent.
+        
+        Before calling the base run(), we can prepare additional context
+        specific to inverse strategy (e.g., copy trace files to container).
+        """
+        # Mark that we're running inverse strategy
+        self._metadata["inverse_strategy"]["traces_provided"] = True
+        
+        # Call the base MiniSWEAgent run
+        super().run()
+        
+        # After run, record evaluation results if available
+        if hasattr(self, 'agent') and hasattr(self.agent, 'model'):
+            self._metadata["inverse_strategy"]["evaluation_history"].append({
+                "round": self.game_context.round,
+                "cost": self.agent.model.cost,
+                "api_calls": self.agent.model.n_calls,
+            })
