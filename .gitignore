@@ -12,6 +12,12 @@ batch_submit*.txt
 round_scores.json
 *.parquet
 
+# Inverse Strategy specific
+data/extracted_strategies/
+data/codeclash_html/
+data/codeclash_strategies/
+*.jsonl
+
 
 # -------------
 

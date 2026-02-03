@@ -12,3 +12,4 @@ except ImportError:
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_DIR = PACKAGE_DIR.parent
 CONFIG_DIR = REPO_DIR / "configs"
+LOG_DIR = REPO_DIR / "logs"
