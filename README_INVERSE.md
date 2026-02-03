@@ -1,6 +1,8 @@
-# Inverse Strategy
+# Inverse Strategy (CodeClash Fork)
 
 Recover game strategies from behavioral observations using LLMs.
+
+> **Note:** This is a fork of [CodeClash](https://github.com/CodeClash-ai/CodeClash) with inverse strategy recovery capabilities.
 
 ## Quick Start
 
@@ -10,8 +12,8 @@ uv venv .venv --python 3.11
 source .venv/bin/activate
 uv pip install -e .
 
-# Run (requires LLM API - see configs/examples/)
-python main.py configs/test/gpt5_offline_eval.yaml
+# Run (requires LLM API - see configs/inverse/examples/)
+python main.py configs/inverse/test/gpt5_offline_eval.yaml
 ```
 
 ## How It Works
@@ -32,18 +34,18 @@ Round 2: LLM refines code → New games → Query learner → 95% accuracy
 ## Project Structure
 
 ```
-configs/
+configs/inverse/
 ├── mini/default.yaml      # Agent prompt templates
 ├── examples/              # Example configs for different LLM providers
 └── test/                  # Test configs
 
-data/
+data/inverse/
 ├── targets/               # Sample target strategies for testing
 │   └── greedy_food/       # Simple deterministic BattleSnake strategy
 └── extracted_strategies/  # Strategies from codeclash_viewer (gitignored)
 
-src/inverse_strategy/
-├── tournaments/           # Tournament orchestration
+codeclash/
+├── tournaments/           # Tournament orchestration (incl. inverse_strategy.py)
 ├── agents/                # LLM agent (mini-swe-agent based)
 ├── arenas/                # Game simulators
 └── traces/                # Trace parsing
@@ -51,7 +53,7 @@ src/inverse_strategy/
 
 ## Configuration
 
-See `configs/examples/` for different LLM providers:
+See `configs/inverse/examples/` for different LLM providers:
 - `battlesnake_gpt5.yaml` - GPT-5 via local proxy
 - `battlesnake_gpt4o.yaml` - GPT-4o via Portkey
 - `battlesnake_o3.yaml` - o3 via Portkey
@@ -73,7 +75,7 @@ players:
     name: learner
     editable: true
     config:
-      agent: !include mini/default.yaml
+      agent: !include inverse/mini/default.yaml
       model:
         model_name: openai/gpt-5
 
@@ -82,26 +84,26 @@ players:
     name: target
     editable: false
     args:
-      source_path: data/targets/greedy_food
+      source_path: data/inverse/targets/greedy_food
 
   # Opponent: plays against target in simulation
   - agent: static
     name: opponent
     editable: false
     args:
-      source_path: data/targets/greedy_food
+      source_path: data/inverse/targets/greedy_food
 ```
 
 ## Adding Target Strategies
 
-Create a directory under `data/targets/`:
+Create a directory under `data/inverse/targets/`:
 ```
-data/targets/my_strategy/
+data/inverse/targets/my_strategy/
 ├── main.py      # Strategy implementation (game-specific API)
 └── README.md    # Document the rules
 ```
 
-See `data/targets/greedy_food/` for an example.
+See `data/inverse/targets/greedy_food/` for an example.
 
 ## Logs
 
@@ -142,5 +144,19 @@ The architecture is game-agnostic. To add a new game:
 
 ## Documentation
 
-- [FLOWCHART_v2.md](docs/FLOWCHART_v2.md) - Detailed architecture diagram
-- [configs/examples/](configs/examples/) - Ready-to-use configs
+- [FLOWCHART_v2.md](docs/inverse/FLOWCHART_v2.md) - Detailed architecture diagram
+- [configs/inverse/examples/](configs/inverse/examples/) - Ready-to-use configs
+
+## Downloading Strategies from CodeClash
+
+Use the scripts in `scripts/inverse/codeclash/` to download strategies:
+
+```bash
+# Download HTML artifacts
+python scripts/inverse/codeclash/download.py --index path/to/index.html
+
+# Extract strategies
+python scripts/inverse/codeclash/extract.py
+```
+
+See [scripts/inverse/codeclash/README.md](scripts/inverse/codeclash/README.md) for details.
