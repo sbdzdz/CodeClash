@@ -10,8 +10,27 @@ import yaml
 from codeclash import CONFIG_DIR
 from codeclash.constants import LOCAL_LOG_DIR
 from codeclash.tournaments.pvp import PvpTournament
+from codeclash.tournaments.inverse_strategy import InverseStrategyTournament
 from codeclash.utils.aws import is_running_in_aws_batch
 from codeclash.utils.yaml_utils import resolve_includes
+
+
+def get_tournament_class(config: dict):
+    """Determine tournament type from config."""
+    # Check if this is an inverse strategy tournament
+    # by looking for 'inverse' agent type in players
+    for player in config.get("players", []):
+        if player.get("agent") == "inverse":
+            return InverseStrategyTournament
+    return PvpTournament
+
+
+def get_tournament_prefix(config: dict) -> str:
+    """Get prefix for output folder based on tournament type."""
+    for player in config.get("players", []):
+        if player.get("agent") == "inverse":
+            return "InverseStrategy"
+    return "PvpTournament"
 
 
 def main(
@@ -42,8 +61,9 @@ def main(
         p_num = len(players)
         p_list = ".".join(sorted(players))
         suffix_part = f".{suffix}" if suffix else ""
+        prefix = get_tournament_prefix(config)
         folder_name = (
-            f"PvpTournament.{config['game']['name']}.r{rounds}.s{sims}.p{p_num}.{p_list}{suffix_part}.{timestamp}"
+            f"{prefix}.{config['game']['name']}.r{rounds}.s{sims}.p{p_num}.{p_list}{suffix_part}.{timestamp}"
         )
         if transparent:
             folder_name += ".transparent"
@@ -61,7 +81,8 @@ def main(
 
     full_output_dir = get_output_path()
 
-    tournament = PvpTournament(config, output_dir=full_output_dir, cleanup=cleanup, keep_containers=keep_containers)
+    tournament_class = get_tournament_class(config)
+    tournament = tournament_class(config, output_dir=full_output_dir, cleanup=cleanup, keep_containers=keep_containers)
     tournament.run()
 
 
