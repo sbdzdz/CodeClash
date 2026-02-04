@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round {{ round_num }} Trajectory - Inverse Strategy Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        .message-user { background-color: #e0f2fe; }
+        .message-assistant { background-color: #f0fdf4; }
+        pre code { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-indigo-600 text-white p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div>
+                <a href="/" class="text-2xl font-bold hover:text-indigo-200">🎯 Inverse Strategy Viewer</a>
+                <p class="text-indigo-200 text-sm">{{ folder_name }} → Round {{ round_num }}</p>
+            </div>
+            <div class="space-x-2">
+                <a href="/experiment/{{ folder_path }}" class="px-4 py-2 bg-indigo-500 rounded hover:bg-indigo-400">← Back to Experiment</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <!-- Traces Summary -->
+        {% if traces %}
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">📊 Round {{ round_num }} Performance</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-blue-50 rounded p-4">
+                    <p class="text-gray-500 text-sm">Accuracy</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ "%.1f"|format(traces.accuracy * 100) }}%</p>
+                </div>
+                <div class="bg-green-50 rounded p-4">
+                    <p class="text-gray-500 text-sm">Matching Actions</p>
+                    <p class="text-2xl font-bold text-green-600">{{ traces.matching_actions }}</p>
+                </div>
+                <div class="bg-purple-50 rounded p-4">
+                    <p class="text-gray-500 text-sm">Total Actions</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ traces.total_actions }}</p>
+                </div>
+                <div class="bg-red-50 rounded p-4">
+                    <p class="text-gray-500 text-sm">Mismatches</p>
+                    <p class="text-2xl font-bold text-red-600">{{ traces.total_actions - traces.matching_actions }}</p>
+                </div>
+            </div>
+            
+            {% if traces.sample_mismatches %}
+            <div class="mt-6">
+                <h3 class="font-semibold mb-2">Sample Mismatches</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Sim</th>
+                                <th class="px-3 py-2 text-left">Turn</th>
+                                <th class="px-3 py-2 text-left">Learner</th>
+                                <th class="px-3 py-2 text-left">Target</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            {% for mismatch in traces.sample_mismatches[:20] %}
+                            <tr>
+                                <td class="px-3 py-2">{{ mismatch.get('sim', '-') }}</td>
+                                <td class="px-3 py-2">{{ mismatch.turn }}</td>
+                                <td class="px-3 py-2 text-red-600">{{ mismatch.learner_action }}</td>
+                                <td class="px-3 py-2 text-green-600">{{ mismatch.target_action }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Trajectory Messages -->
+        {% if trajectory and trajectory.messages %}
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-semibold">🤖 Agent Trajectory ({{ trajectory.messages|length }} messages)</h2>
+                <div class="text-sm text-gray-500">
+                    {% if trajectory.info %}
+                    Steps: {{ trajectory.info.get('model_stats', {}).get('api_calls', '-') }} |
+                    Cost: ${{ "%.2f"|format(trajectory.info.get('model_stats', {}).get('instance_cost', 0)) }} |
+                    Status: {{ trajectory.info.get('exit_status', '-') }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="divide-y">
+                {% for message in trajectory.messages %}
+                <div class="p-4 {% if message.role == 'user' %}message-user{% else %}message-assistant{% endif %}">
+                    <div class="flex items-center mb-2">
+                        <span class="font-semibold {% if message.role == 'user' %}text-blue-700{% else %}text-green-700{% endif %}">
+                            {% if message.role == 'user' %}📥 System/Output{% else %}🤖 Agent{% endif %}
+                        </span>
+                        <span class="ml-2 text-xs text-gray-500">{{ loop.index }}</span>
+                    </div>
+                    <div class="prose max-w-none">
+                        <pre class="bg-gray-800 text-gray-100 p-4 rounded overflow-x-auto text-sm"><code>{{ message.content }}</code></pre>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <p class="text-gray-500">No trajectory data available for this round.</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

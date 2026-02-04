@@ -21,7 +21,7 @@ from codeclash.analysis.viz.utils import (
     get_color,
     get_display_name,
 )
-from codeclash.constants import LOG_DIR
+from codeclash.constants import LOCAL_LOG_DIR as LOG_DIR
 
 
 @dataclass

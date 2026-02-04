@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverse Strategy Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-indigo-600 text-white p-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold">🎯 Inverse Strategy Viewer</h1>
+            <p class="text-indigo-200 text-sm">Strategy Recovery Experiments</p>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-2">Log Directory</h2>
+            <p class="text-gray-600 font-mono text-sm">{{ log_dir }}</p>
+        </div>
+
+        {% if folders %}
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Experiments ({{ folders|length }})</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Experiment</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Game</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Learner</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rounds</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Best Accuracy</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for folder in folders %}
+                        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='/experiment?path={{ folder.path | urlencode }}'">
+                            <td class="px-4 py-3">
+                                <span class="font-mono text-sm text-indigo-600">{{ folder.name }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">{{ folder.game }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="font-medium">{{ folder.learner }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-gray-600">{{ folder.target }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ folder.rounds }}{% if folder.total_rounds %}/{{ folder.total_rounds }}{% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="font-bold {% if folder.best_accuracy > 0.5 %}text-green-600{% elif folder.best_accuracy > 0.3 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ "%.1f"|format(folder.best_accuracy * 100) }}%
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ folder.best_accuracy * 100 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <p class="text-gray-500 text-lg">No experiments found in {{ log_dir }}</p>
+            <p class="text-gray-400 mt-2">Run an inverse strategy tournament to see results here.</p>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

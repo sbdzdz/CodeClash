@@ -1,4 +1,5 @@
-# Full GPT-5 experiment - 10 rounds, 100 sims per round
+# Full GPT-5 experiment - 5 rounds, 20 sims per round
+# Testing against a REAL strategy (Claude Sonnet 4 from CodeClash)
 #
 # Offline Evaluation Design:
 # - Target vs Opponent play in simulation (learner does NOT play)
@@ -6,11 +7,11 @@
 # - Accuracy = "Would learner do the same as target given target's state?"
 
 tournament:
-  rounds: 10
+  rounds: 5
 
 game:
   name: BattleSnake
-  sims_per_round: 100
+  sims_per_round: 20
   args:
     width: 11
     height: 11
@@ -30,12 +31,12 @@ players:
           api_base: http://localhost:8000/v1
           api_key: dummy
 
-  # Target: strategy to be recovered, plays in simulation
+  # Target: REAL Claude Sonnet 4 strategy from CodeClash (296 lines, complex)
   - agent: static
     name: target
     editable: false
     args:
-      source_path: data/inverse/targets/greedy_food
+      source_path: data/inverse/targets/claude_sonnet4
 
   # Opponent: plays against target in simulation
   - agent: static
